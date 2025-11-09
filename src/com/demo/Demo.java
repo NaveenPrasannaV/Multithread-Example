@@ -16,7 +16,6 @@ class Car extends Thread {
 class Bus implements Runnable {
 
     public String createBus(int i) {
-
         return "Bus is running : " + i;
     }
 
@@ -27,7 +26,9 @@ class Bus implements Runnable {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                // Restore interrupt status and exit loop (cooperative interruption)
+                Thread.currentThread().interrupt();
+                break;
             }
         }
     }
@@ -36,42 +37,42 @@ class Bus implements Runnable {
 public class Demo {
     public static void main(String[] args) throws InterruptedException {
 
-        System.out.println(" --- "+Thread.currentThread().getName()+" --- ");
+        System.out.println(" --- " + Thread.currentThread().getName() + " --- ");
 
         Car c = new Car();
-
         c.setName("Thread-1");
         c.start();
-        System.out.println("Thread : " + c.getName() + ", " + "is alive : " + c.isAlive());
-        c.yield();
-        System.out.println("Thread : " + c.getName() + ", " + "is alive : " + c.isAlive());
+
+        System.out.println("Thread : " + c.getName() + ", is alive : " + c.isAlive());
+
+        // yield is a static hint to the scheduler
+        Thread.yield();
+        System.out.println("Thread : " + c.getName() + ", is alive : " + c.isAlive());
 
         Thread t1 = new Thread(new Bus());
-
         t1.setName("Thread-2");
         t1.start();
-        System.out.println("Thread : " + t1.getName() + ", " + "is alive : " + t1.isAlive());
-        t1.yield();
-        System.out.println("Thread : " + t1.getName() + ", " + "is alive : " + t1.isAlive());
+
+        System.out.println("Thread : " + t1.getName() + ", is alive : " + t1.isAlive());
+        Thread.yield();
+        System.out.println("Thread : " + t1.getName() + ", is alive : " + t1.isAlive());
 
         Thread t3 = new Thread(() -> {
             for (int i = 0; i < 5; i++) {
                 System.out.println("Lorry is running : " + i);
             }
-        },"Thread - 3");
+        }, "Thread-3");
 
         t3.start();
-        System.out.println("Thread : " + t3.getName() + ", " + "is alive : " + t3.isAlive());
-        t3.yield();
-        System.out.println("Thread : " + t3.getName() + ", " + "is alive : " + t3.isAlive());
+        System.out.println("Thread : " + t3.getName() + ", is alive : " + t3.isAlive());
+        Thread.yield();
+        System.out.println("Thread : " + t3.getName() + ", is alive : " + t3.isAlive());
 
+        // Wait for all threads to finish
         c.join();
         t1.join();
         t3.join();
 
-        System.out.println(" --- "+Thread.currentThread().getName()+" --- ");
-
+        System.out.println(" --- " + Thread.currentThread().getName() + " --- ");
     }
-
-
 }
